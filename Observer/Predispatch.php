@@ -15,7 +15,7 @@ class Predispatch implements ObserverInterface {
 
     public function __construct (
         \Magento\Framework\App\Response\Http $redirect,
-        \Magento\ConfigurableProduct\Model\ResourceModel\Product\Type\Configurable $productTypeConfigurable,
+        \Magento\ConfigurableProduct\Model\Product\Type\Configurable $productTypeConfigurable,
         \Magento\Catalog\Model\ProductRepository $productRepository,
         \Magento\Store\Model\StoreManagerInterface $storeManager,
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
@@ -56,7 +56,13 @@ class Predispatch implements ObserverInterface {
 
         foreach ($configProductIds as $configProductId) {
             try {
-                $configProduct = $this->_productRepository->getById($configProductId, false, $this->_storeManager->getStore()->getId());
+                $currentWebsiteId = $this->_storeManager->getStore()->getWebsiteId();
+                $websiteIds = $this->_productRepository->getById($configProductId)->getWebsiteIds();
+                if(in_array($currentWebsiteId, $websiteIds)){
+                    $configProduct =  $this->_productRepository->getById($configProductId);
+                } else {
+                    return;
+                }
             } catch (NoSuchEntityException $e) {
                 continue;
             }
